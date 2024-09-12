@@ -12,8 +12,8 @@ import java.util.stream.Stream;
 public class PieceSet implements Iterable<PieceInfo> {
 
     private static final PieceSet EMPTY = new PieceSet(
-            List.of(),
-            List.of()
+            new ArrayList<>(),
+            new ArrayList<>()
     );
 
     private final List<PieceInfo> pawns;
@@ -98,11 +98,14 @@ public class PieceSet implements Iterable<PieceInfo> {
     }
 
     public void remove(Square square) {
-        this.update(square,
-                new Square(
-                        Coordinate.OUT,
-                        (byte) 0
-                )
-        );
+        this.pieces.remove(square.getCoordinate());
+        this.pawns.remove(square.getCoordinate());
+    }
+
+    public void addPiece(PieceInfo pieceInfo) {
+        List<PieceInfo> set = pieceInfo.getPiece().equals(Piece.PAWN)
+                              ? pawns
+                              : pieces;
+        set.add(pieceInfo);
     }
 }

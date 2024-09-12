@@ -38,7 +38,7 @@ public class FenRepresentation implements GameStateRepresentation {
 
     public static class Builder implements GameStateRepresentationBuilder {
 
-        private static final String INITIAL = "rnbqkbnr/pppppppp/8/8/8/3q4/PPP1PPPP/RNBQKBNR w " +
+        private static final String INITIAL = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w " +
                                               "KQkq a2 0 1";
 
         private static Squares getSquares(String str) {

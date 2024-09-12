@@ -16,13 +16,6 @@ public class Coordinates implements Iterable<Coordinate> {
         this.coordinates = new HashSet<>(coordinates);
     }
 
-    public static Coordinates collect(Collection<Coordinates> coordinates) {
-        return coordinates.stream().reduce(
-                new Coordinates(),
-                Coordinates::add
-        );
-    }
-
     public static Coordinates of(Collection<Coordinate> coordinates) {
         return new Coordinates(coordinates);
     }
@@ -30,10 +23,6 @@ public class Coordinates implements Iterable<Coordinate> {
     @Override
     public Iterator<Coordinate> iterator() {
         return this.coordinates.iterator();
-    }
-
-    public Coordinates clean() {
-        return Coordinates.of(coordinates.stream().filter(Coordinate::isWithin).toList());
     }
 
     public Coordinates add(Coordinates coordinates) {

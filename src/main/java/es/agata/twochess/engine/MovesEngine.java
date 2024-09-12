@@ -12,7 +12,6 @@ import java.util.Optional;
 
 public interface MovesEngine {
 
-
     MoveLegality legality(
             Coordinate coordinate,
             Move move,

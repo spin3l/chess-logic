@@ -1,6 +1,7 @@
 package main.java.es.agata.twochess.board.state;
 
 import main.java.es.agata.twochess.board.pieces.Piece;
+import main.java.es.agata.twochess.board.pieces.PieceInfo;
 import main.java.es.agata.twochess.board.pieces.PieceSet;
 import main.java.es.agata.twochess.board.pieces.Player;
 import main.java.es.agata.twochess.board.squares.Square;
@@ -18,8 +19,9 @@ public class GameState {
     private final MoveCounter    halfMove;
     private final MoveCounter    fullMove;
 
-    private final PieceSet whitePieceSet;
-    private final PieceSet blackPieceSet;
+    private final PieceSet   whitePieceSet;
+    private final PieceSet   blackPieceSet;
+    private       BoardState boardState;
 
     public GameState(
             Squares squares,
@@ -46,7 +48,10 @@ public class GameState {
                 squares,
                 Player.BLACK
         );
+
+        this.boardState = BoardState.OPEN;
     }
+
 
     public PieceSet getPieceSet(Player player) {
         if (player.equals(Player.NONE)) {
@@ -55,6 +60,22 @@ public class GameState {
         return player.isWhite()
                ? whitePieceSet
                : blackPieceSet;
+    }
+
+    public boolean setSquare(
+            Coordinate coordinate,
+            Byte value
+    ) {
+        Optional<Square> square = this.squares.get(coordinate);
+        if (square.isEmpty()) {
+            return false;
+        }
+        square.get().setValue(value);
+        getPieceSet(Player.from(value)).addPiece(new PieceInfo(
+                Piece.from(value),
+                coordinate
+        ));
+        return true;
     }
 
     public Optional<Byte> getSquare(Coordinate coordinate) {
@@ -93,22 +114,4 @@ public class GameState {
         return Optional.of(toValue);
     }
 
-    @Override
-    public String toString() {
-        return new StringBuilder().append(squares)
-                                  .append("\nCurrent player: ")
-                                  .append(this.currentPlayer)
-                                  .append("\nCastling ")
-                                  .append("\n\t- WHITE: ")
-                                  .append(this.whiteCastling)
-                                  .append("\n\t- BLACK: ")
-                                  .append(this.blackCastling)
-                                  .append("\nEn passant target: ")
-                                  .append(this.enPassantTarget)
-                                  .append("\nHalfmove clock: ")
-                                  .append(this.halfMove)
-                                  .append("\nFullmove counter: ")
-                                  .append(this.fullMove)
-                                  .toString();
-    }
 }

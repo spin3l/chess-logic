@@ -2,6 +2,7 @@ package main.java.es.agata.twochess.engine;
 
 import main.java.es.agata.twochess.board.Board;
 import main.java.es.agata.twochess.board.moves.*;
+import main.java.es.agata.twochess.board.pieces.Piece;
 import main.java.es.agata.twochess.board.pieces.PieceInfo;
 import main.java.es.agata.twochess.board.pieces.PieceSet;
 import main.java.es.agata.twochess.board.representations.GameStateRepresentation;
@@ -13,21 +14,14 @@ import main.java.es.agata.twochess.board.state.Coordinate;
 import java.util.List;
 import java.util.Optional;
 
-public record GameEngine(Board board) implements MovesEngine {
+public class GameEngine implements MovesEngine {
 
-    private static final MovesCache cache = MovesCache.getInstance();
+    private final Cache<Byte, List<MoveDirection>> cache;
+    private final Board                            board;
 
-    static {
-        for (Moves m : Moves.values()) {
-            cache.put(
-                    m.piece().value(Player.WHITE),
-                    m.moves()
-            );
-            cache.put(
-                    m.piece().value(Player.BLACK),
-                    m.mirroredMoves()
-            );
-        }
+    public GameEngine(Board board) {
+        this.cache = MovesCache.getInstance();
+        this.board = board;
     }
 
     @Override
@@ -104,7 +98,6 @@ public record GameEngine(Board board) implements MovesEngine {
         ));
     }
 
-
     @Override
     public GameStateRepresentation getRepresentation(GameStateRepresentationBuilder representationBuilder) {
         return representationBuilder.build(board.getGameState());
@@ -115,8 +108,13 @@ public record GameEngine(Board board) implements MovesEngine {
             Move move,
             Player checkPlayer
     ) {
-        // Enemy targets this players king ??
         Coordinate landing = coordinate.applyMove(move);
+
+        if (landing.isOut()) {
+            return false;
+        }
+
+        Byte landingValue = this.board.getGameState().getSquare(landing).get();
 
         try {
             this.move(
@@ -132,16 +130,26 @@ public record GameEngine(Board board) implements MovesEngine {
                     landing,
                     coordinate
             );
+            if (!Piece.from(landingValue).equals(Piece.NONE)) {
+                this.board.getGameState().setSquare(
+                        landing,
+                        landingValue
+                );
+            }
         }
     }
 
     private Coordinates targetedCoordinates(Player player) {
         Coordinates result = new Coordinates();
 
-        this.board.getPieceSet(player).forEach(pieceInfo -> result.add(legalMoves(
-                pieceInfo.getCoordinate(),
-                false
-        ).get()));
+        for (PieceInfo pieceInfo : board.getPieceSet(player)) {
+            Optional<Coordinates> moves = legalMoves(
+                    pieceInfo.getCoordinate(),
+                    false
+            );
+
+            result.add(moves.get());
+        }
 
         return result;
     }
@@ -152,7 +160,7 @@ public record GameEngine(Board board) implements MovesEngine {
             boolean checkKingSafety
     ) {
         Coordinates         coordinates = new Coordinates();
-        List<MoveDirection> moves       = moves(squareValue);
+        List<MoveDirection> moves       = this.cache.get(squareValue).orElse(List.of());
 
         Player player = Player.from(squareValue);
 
@@ -176,9 +184,5 @@ public record GameEngine(Board board) implements MovesEngine {
         }
 
         return coordinates;
-    }
-
-    private static List<MoveDirection> moves(byte squareValue) {
-        return GameEngine.cache.get(squareValue).orElse(List.of());
     }
 }
